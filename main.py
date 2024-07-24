@@ -160,7 +160,7 @@ while True:
         val = pot.read()
         level = f"{val * (3.3 / 4095)}"
         # current is returned in milliamps
-        print("Current       / mA: %8.3f" % (sensor.current))
+        #print("Current       / mA: %8.3f" % (sensor.current))
         message = {
         'TIME':getTime(),
         'rainmsg':rainmsg,
