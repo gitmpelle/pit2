@@ -1,6 +1,6 @@
 # Complete project details at https://RandomNerdTutorials.com
 # import boot
-rev = '072024-001'
+rev = '072424-001'
 from machine import Pin, ADC, WDT, SoftI2C
 from time import sleep,sleep_ms
 import time, json, ina219
@@ -147,6 +147,7 @@ wlan_mac = station.config('mac')
 mac = ubinascii.hexlify(wlan_mac).decode().upper()
 wdt = WDT(timeout=6000)  # enable it with a timeout of 6s
 wdt.feed()
+message_interval = 20
 while True:
   try:
     gc.collect() 
