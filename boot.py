@@ -1,4 +1,4 @@
-
+bootFW = '072824-001'
 from ota import OTAUpdater
 import network, utime, machine, time
 from umqtt.simple import MQTTClient
@@ -51,6 +51,7 @@ while station.isconnected() == False:
     diff = time.ticks_diff(time.ticks_ms(), start)
     if diff > timeout:
         print('Connecting Timeout')
+        machine.reset() #added 072824
         break
     print('\rconnecting %s' % diff, end="\r")
     time.sleep_ms(1000)
