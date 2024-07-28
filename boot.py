@@ -1,4 +1,4 @@
-bootFW = '072824-001'
+bootFW = '072824-002'
 from ota import OTAUpdater
 import network, utime, machine, time
 from umqtt.simple import MQTTClient
