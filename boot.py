@@ -1,4 +1,4 @@
-bootFW = '072824-002'
+bootFW = '080124-001'
 from ota import OTAUpdater
 import network, utime, machine, time
 from umqtt.simple import MQTTClient
@@ -11,56 +11,84 @@ import gc
 gc.collect()
 import json
 import ubinascii
-firmware_url = "https://raw.githubusercontent.com/gitmpelle/pit2/"
-
-mqtt_server = "m15.cloudmqtt.com"
-client_id = ubinascii.hexlify(machine.unique_id())
-topic_sub = b"pit002"
-topic_pub = b"pit002Msg"
-port = 12638
-mqpassword = "zaXkKvgMe7Hx"
-mquser = "quoaqddx"
-
-ssid = "TP-Link_2.4GHz"
-password = "upperlove"
-
-# ssid = "PELLE-2G"
-# password = "upperlove"
-
-last_message = 0
-message_interval = 300
-counter = 0
+import urequests
 
 # disable all network interface first
 network.WLAN(network.AP_IF).active(False)
 network.WLAN(network.STA_IF).active(False)
 
-station = network.WLAN(network.STA_IF)
+# MQTT login info
+mqtt_server = "m15.cloudmqtt.com"
+client_id = ubinascii.hexlify(machine.unique_id())
+port = 12638
+mqpassword = "zaXkKvgMe7Hx"
+mquser = "quoaqddx"
 
-station.active(True)
-station.connect(ssid, password)
+last_message = 0
+message_interval = 300
+counter = 0
 #*****************************************
 
+# Set up the Wi-Fi networks you want to try to connect to
+networks = [("cell", "upperlove"),("TP-Link_2.4GHz", "upperlove"), ("PELLE-2G", "upperlove"), ("NETGEAR19", "jollypotato823")]
 
-# try to connecting
-timeout = 10000
-start = time.ticks_ms()
+# Attempt to connect to each network in order
+for ssid, psk in networks:
+    print(f'ssid: {ssid} psk: {psk}')
+    # disable all network interface first
+    network.WLAN(network.AP_IF).active(False)
+    network.WLAN(network.STA_IF).active(False)    
+    station = network.WLAN(network.STA_IF)
+    station.active(True)
+    station.connect(ssid, psk)
 
+    # Wait for the connection to succeed or fail
+    for _ in range(20):
+        if station.isconnected():
+            print("Connected to", ssid)
+            break
+        else:
+            time.sleep(0.5)
 
-while station.isconnected() == False:
-    diff = time.ticks_diff(time.ticks_ms(), start)
-    if diff > timeout:
+    # If we successfully connected to a network, stop trying
+    if station.isconnected():
+        break
+
+# Check for Connection Timeout
+if station.isconnected() == False:
         print('Connecting Timeout')
         machine.reset() #added 072824
-        break
-    print('\rconnecting %s' % diff, end="\r")
-    time.sleep_ms(1000)
 
+# Ping www.google.com
+try:
+    response = urequests.get("http://www.google.com")
+    if response.status_code == 204:
+        print("online")
+    elif response.status_code == 200:
+        print("portal")
+        time.sleep(1)
+    else:
+        print("offline")
+except:
+    time.sleep(10)
+    print("No internet")
+    machine.reset() #added 072824
+
+# Connection details
 print(station.ifconfig())
 s = machine.unique_id()
 idint = "".join(map(str, s))
 print(idint)
 wlan_mac = station.config('mac')
 print(ubinascii.hexlify(wlan_mac).decode().upper())
-ota_updater = OTAUpdater(ssid, password, firmware_url, "main.py")
+mac = ubinascii.hexlify(wlan_mac).decode().upper()
+
+# Mqtt msg
+topic_sub = f'{mac}'
+topic_pub = f'{mac}_Msg'
+
+# CHECK FOR OTA UPDATE
+firmware_url = "https://raw.githubusercontent.com/gitmpelle/pit2/"
+ota_updater = OTAUpdater(ssid, psk, firmware_url, "main.py")
 ota_updater.download_and_install_update_if_available()
+print('OTA UPDATE END')
