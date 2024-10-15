@@ -1,6 +1,6 @@
 # Complete project details at https://RandomNerdTutorials.com
 # import boot
-rev = '101324-001'
+rev = '101424-001'
 from machine import Pin, ADC, WDT, SoftI2C
 from time import sleep,sleep_ms
 import time, json, ina219, os
@@ -36,10 +36,11 @@ def rain_handle_interrupt(irq):
 
 def ota_updater(file):
     global ssid, psk, firmware_url
-    print(f'{ssid}-{psk}-{firmware_url}')
     ota_updater = OTAUpdater(ssid, psk, firmware_url, file)
-    ota_updater.download_and_install_update_if_available()   
-
+    msg = ota_updater.fetch_latest_code()
+    print(f'update: {msg}')
+    print('Restarting device...')
+    machine.reset()  # Reset the device to run the new code.
 
 def sub_cb(topic, msg):
   global pot
