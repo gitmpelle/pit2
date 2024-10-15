@@ -1,6 +1,6 @@
-bootFW = '080124-001'
+bootFW = '101524-001'
 from ota import OTAUpdater
-import network, utime, machine, time
+import network, utime, machine, time, os
 from umqtt.simple import MQTTClient
 import ubinascii
 import micropython
@@ -27,6 +27,24 @@ mquser = "quoaqddx"
 last_message = 0
 message_interval = 300
 counter = 0
+
+def onlinePing():
+    try:
+        response = urequests.get("http://www.google.com")
+        if response.status_code == 204:
+            print("online")
+            return True
+        elif response.status_code == 200:
+            print("portal")
+            return True
+        else:
+            print("offline")
+            return False
+    except:
+        time.sleep(10)
+        print("No internet")
+        return False
+
 #*****************************************
 
 # Set up the Wi-Fi networks you want to try to connect to
@@ -49,32 +67,16 @@ for ssid, psk in networks:
             break
         else:
             time.sleep(0.5)
-
-    # If we successfully connected to a network, stop trying
-    if station.isconnected():
+            
+    if onlinePing():
+        print("Online")
         break
 
 # Check for Connection Timeout
 if station.isconnected() == False:
         print('Connecting Timeout')
         machine.reset() #added 072824
-
-# Ping www.google.com
-try:
-    response = urequests.get("http://www.google.com")
-    if response.status_code == 204:
-        print("online")
-    elif response.status_code == 200:
-        print("portal")
-        time.sleep(1)
-    else:
-        print("offline")
-except:
-    time.sleep(10)
-    print("No internet")
-    machine.reset() #added 072824
-
-# Connection details
+        
 print(station.ifconfig())
 s = machine.unique_id()
 idint = "".join(map(str, s))
