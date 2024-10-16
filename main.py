@@ -1,6 +1,6 @@
 # Complete project details at https://RandomNerdTutorials.com
 # import boot
-rev = '101424-001'
+rev = '101524-001'
 from machine import Pin, ADC, WDT, SoftI2C
 from time import sleep,sleep_ms
 import time, json, ina219, os
@@ -39,6 +39,12 @@ def ota_updater(file):
     ota_updater = OTAUpdater(ssid, psk, firmware_url, file)
     msg = ota_updater.fetch_latest_code()
     print(f'update: {msg}')
+    try:
+        ota_updater.update_no_reset()
+    except Exception as e:
+        print(e)
+        pass        
+    os.rename('latest_code.py', file)
     print('Restarting device...')
     machine.reset()  # Reset the device to run the new code.
 
